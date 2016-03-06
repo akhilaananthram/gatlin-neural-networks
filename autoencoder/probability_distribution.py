@@ -44,6 +44,6 @@ class ProbabilityDistribution(caffe.Layer):
         N, D, M, _ = bottom[0].data.shape
         x_deriv, y_deriv = np.meshgrid(np.arange(M), np.arange(M))
         for i in xrange(N):
-            bottom[0].diff[i][::2] = xv
-            bottom[0].diff[i][1::2] = yv
+            bottom[0].diff[i][::2] = x_deriv
+            bottom[0].diff[i][1::2] = y_deriv
             # TODO: incorporate d top / d fc
