@@ -8,7 +8,7 @@ class SpatialSoftMax(caffe.Layer):
         N : items per batch
         D : number of filters
         M : dimensions of image
-    Output: 1 top blob of shape N x 2 * D
+    Output: 1 top blob of shape N x D x M x M
     """
     
     def setup(self, bottom, top):
@@ -22,32 +22,21 @@ class SpatialSoftMax(caffe.Layer):
         self.alpha = 0.1
          
     def reshape(self, bottom, top):
-        N, D, _, _ = bottom[0].data.shape
-        top[0].reshape(*(N, 2 * D))
+        N, D, M, _ = bottom[0].data.shape
+        top[0].reshape(*(N, D, M, M))
 
     def forward(self, bottom, top):
-        _, D, M, _ = bottom[0].data.shape
-        # for each image apply the softmax function to all channels
+        # for each image apply the exponential function to all channels
         exp_bottom = np.exp(bottom[0].data / self.alpha)
-        
-        xv, yv = np.meshgrid(np.arange(M), np.arange(M))
 
         for i in xrange(bottom[0].num):
             # axis=1 -> channels
             denominator = np.sum(exp_bottom[i], axis=1)
             denominator = np.sum(denominator, axis=1)
-            denominator = np.reshape(np.tile(denominator, M), (D, M))
-            softmax = exp_bottom[i] / denominator[:, np.newaxis]
-
-            # Compute the expected 2D position for the probability distribution of each channel
-            x_fc = np.sum(xv * softmax, axis=1)
-            x_fc = np.sum(x_fc, axis=1)
-            y_fc = np.sum(yv * softmax, axis=1)
-            y_fc = np.sum(y_fc, axis=1)
-            top[0].data[i][::2] = x_fc
-            top[0].data[i][1::2] = y_fc
+            top[0].data[i][:] = exp_bottom[i] / denominator[:, np.newaxis, np.newaxis]
 
     def backward(self, top, propagate_down, bottom):
         # TODO: backprop alpha
-        # bottom[0].diff[...]
+        # top[0].diff[...] = d top / d s_cij
+        # d s_cij / d a_ci'j' = sc_ij (delta_ij - s_ci'j') where delta_ij = 1 if i=i', j=j', else 0
         pass

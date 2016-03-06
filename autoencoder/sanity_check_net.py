@@ -11,7 +11,7 @@ if __name__ == "__main__":
     trained_net = caffe.Net(args.proto, caffe.TRAIN)
 
     print "Feature Points Dimensions:"
-    print trained_net.blobs["spatialsoftmax"].data.shape
+    print trained_net.blobs["probabilitydist"].data.shape
 
     print "running sanity check on forward and backward passes"
     trained_net.forward()

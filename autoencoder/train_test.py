@@ -4,7 +4,7 @@ import numpy as np
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run train and test")
-    parser.add_argument("--solver", default="quick_solver.prototxt",
+    parser.add_argument("--solver", default="sgd_solver.prototxt",
                         help="Path to quick solver proto file")
     parser.add_argument("--model", default=None, type=str,
                         help="Path to pretrained caffe model")

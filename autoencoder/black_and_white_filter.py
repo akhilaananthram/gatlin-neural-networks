@@ -8,7 +8,7 @@ class BlackAndWhiteFilter(caffe.Layer):
         N : items per batch
         D : number of filters
         M : dimensions of image
-    Output: 1 top blob of shape N x M x M
+    Output: 1 top blob of shape N x 1 x M x M
     """
     
     def setup(self, bottom, top):
@@ -25,7 +25,7 @@ class BlackAndWhiteFilter(caffe.Layer):
     def forward(self, bottom, top):
         # 0.21 R + 0.72 G + 0.07 B
         gray = bottom[0].data[:,0,:,:] * 0.21 + bottom[0].data[:,1,:,:] * 0.72 + bottom[0].data[:,2,:,:] * 0.07
-        # add the dimensions for channels
+        # add the dimension for channels
         top[0].data[:] = np.expand_dims(gray, axis=1)
 
     def backward(self, top, propagate_down, bottom):
