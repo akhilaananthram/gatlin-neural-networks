@@ -22,7 +22,8 @@ class SpatialSoftMax(caffe.Layer):
         self.alpha = 0.1
          
     def reshape(self, bottom, top):
-        pass
+        N, D, _, _ = bottom[0].data.shape
+        top[0].reshape(*(N, 2 * D))
 
     def forward(self, bottom, top):
         _, _, M, _ = bottom.shape

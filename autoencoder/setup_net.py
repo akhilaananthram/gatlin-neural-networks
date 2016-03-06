@@ -16,7 +16,7 @@ def pynet(training_images, batch_size):
     #n.original = L.ImageData(source=training_images, batch_size=batch_size,
     #                          new_height=SIZE, new_width=SIZE, shuffle=True)
     n.original = L.Data(source=training_images, batch_size=batch_size,
-                        crop_size=SIZE, backend=1)
+                        crop_size=SIZE, backend=P.Data.LMDB)
     # Get black and white
     n.blackandwhite = L.Python(n.original, name="blackandwhite", ntop=1,
                                 python_param={"module": "black_and_white_filter",
