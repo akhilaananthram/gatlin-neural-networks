@@ -17,7 +17,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Get image paths and size
-    images = os.listdir(args.data)
+    images = [f for f in os.listdir(args.data) if not f.startswith(".")]
     n_bytes = sum([os.path.getsize(os.path.join(args.data, img)) for img in images])
     print "Setting up {} images".format(len(images))
 

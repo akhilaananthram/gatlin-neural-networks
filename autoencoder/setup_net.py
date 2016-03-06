@@ -5,7 +5,7 @@ import sys
 from caffe import layers as L
 from caffe import params as P
 
-BATCH = 10  # batch size
+BATCH = 64  # batch size
 SIZE = 240 # size of image for input
 DOWNSAMPLE = 60 # size of downsampled black and white image
 
@@ -24,6 +24,7 @@ def pynet(training_images, batch_size):
     # Downsample with max pooling
     # w_out = math.floor((w_in + 2 * p - k) / s) + 1
     n.downsample = L.Pooling(n.blackandwhite, kernel_size=4, stride=4)
+    n.downsample_flat = L.Flatten(n.downsample)
 
     # TODO: identify appropriate fillers for weights and bias terms
     # TODO: initialize weights from pretrained network
@@ -44,7 +45,7 @@ def pynet(training_images, batch_size):
     n.reconstruction = L.InnerProduct(n.spatialsoftmax, num_output=DOWNSAMPLE * DOWNSAMPLE,
                                       weight_filler={"type": "gaussian", "std": 0.01})
     # TODO: add smoothness penalty
-    n.loss = L.EuclideanLoss(n.reconstruction, n.blackandwhite)
+    n.loss = L.EuclideanLoss(n.reconstruction, n.downsample_flat)
 
     return n.to_proto()
 

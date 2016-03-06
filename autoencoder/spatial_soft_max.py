@@ -26,7 +26,7 @@ class SpatialSoftMax(caffe.Layer):
         top[0].reshape(*(N, 2 * D))
 
     def forward(self, bottom, top):
-        _, _, M, _ = bottom.shape
+        _, D, M, _ = bottom[0].data.shape
         # for each image apply the softmax function to all channels
         exp_bottom = np.exp(bottom[0].data / self.alpha)
         
@@ -35,14 +35,19 @@ class SpatialSoftMax(caffe.Layer):
         for i in xrange(bottom[0].num):
             # axis=1 -> channels
             denominator = np.sum(exp_bottom[i], axis=1)
-            softmax = exp_bottom[i] / denominator
+            denominator = np.sum(denominator, axis=1)
+            denominator = np.reshape(np.tile(denominator, M), (D, M))
+            softmax = exp_bottom[i] / denominator[:, np.newaxis]
 
             # Compute the expected 2D position for the probability distribution of each channel
-            x_fc = np.sum(xv * softmax, axis=0)
-            y_fc = np.sum(yv * softmax, axis=0)
+            x_fc = np.sum(xv * softmax, axis=1)
+            x_fc = np.sum(x_fc, axis=1)
+            y_fc = np.sum(yv * softmax, axis=1)
+            y_fc = np.sum(y_fc, axis=1)
             top[0].data[i][::2] = x_fc
             top[0].data[i][1::2] = y_fc
 
     def backward(self, top, propagate_down, bottom):
         # TODO: backprop alpha
+        # bottom[0].diff[...]
         pass
