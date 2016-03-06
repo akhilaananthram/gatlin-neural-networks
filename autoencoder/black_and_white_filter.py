@@ -23,7 +23,7 @@ class BlackAndWhiteFilter(caffe.Layer):
 
     def forward(self, bottom, top):
         # 0.21 R + 0.72 G + 0.07 B
-        top[0].data = bottom[0].data[:,:,:,0] * 0.21 + bottom[0].data[:,:,:,1] * 0.72 + bottom[0].data[:,:,:,2] * 0.07
+        top[0].data = bottom[0].data[:,0,:,:] * 0.21 + bottom[0].data[:,1,:,:] * 0.72 + bottom[0].data[:,2,:,:] * 0.07
 
     def backward(self, top, propagate_down, bottom):
         pass

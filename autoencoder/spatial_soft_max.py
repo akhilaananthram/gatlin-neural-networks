@@ -4,10 +4,10 @@ import numpy as np
 
 class SpatialSoftMax(caffe.Layer):
     """
-    Input: an embedding blob (shape N x M x M x D)
+    Input: an embedding blob (shape N x D x M x M)
         N : items per batch
-        M : dimensions of image
         D : number of filters
+        M : dimensions of image
     Output: 1 top blob of shape N x 2 * D
     """
     
@@ -25,7 +25,7 @@ class SpatialSoftMax(caffe.Layer):
         pass
 
     def forward(self, bottom, top):
-        _, M, _, _ = bottom.shape
+        _, _, M, _ = bottom.shape
         # for each image apply the softmax function to all channels
         exp_bottom = np.exp(bottom[0].data / self.alpha)
         
@@ -37,8 +37,8 @@ class SpatialSoftMax(caffe.Layer):
             softmax = exp_bottom[i] / denominator
 
             # Compute the expected 2D position for the probability distribution of each channel
-            x_fc = np.sum(xv * softmax, axis=1)
-            y_fc = np.sum(yv * softmax, axis=1)
+            x_fc = np.sum(xv * softmax, axis=0)
+            y_fc = np.sum(yv * softmax, axis=0)
             top[0].data[i][::2] = x_fc
             top[0].data[i][1::2] = y_fc
 
