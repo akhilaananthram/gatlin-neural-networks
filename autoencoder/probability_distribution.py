@@ -37,13 +37,14 @@ class ProbabilityDistribution(caffe.Layer):
             top[0].data[i][1::2] = y_fc
 
     def backward(self, top, propagate_down, bottom):
-        # TODO: backprop alpha
-        # top[0].diff[...] = d top / d y_fc or d top / d x_fc
-        # d y_fc / d_scij = j
+        # top[0].diff[...] = d top / d x_fc or d top / d y_fc
         # d x_fc / d_scij = i
+        # d y_fc / d_scij = j
         N, D, M, _ = bottom[0].data.shape
-        x_deriv, y_deriv = np.meshgrid(np.arange(M), np.arange(M))
-        for i in xrange(N):
-            bottom[0].diff[i][::2] = x_deriv
-            bottom[0].diff[i][1::2] = y_deriv
-            # TODO: incorporate d top / d fc
+        d_fcx_scij, d_fcy_scij = np.meshgrid(np.arange(M), np.arange(M))
+        for k in xrange(N):
+            # d L / d s_cij = d L / d x_fc * d x_fc / d s_cij + d L / d y_fc * d y_fc / d s_cij
+            d_L_fcx = top[0].diff[k][::2]
+            d_L_fcy = top[0].diff[k][1::2]
+            for c in xrange(D):
+                bottom[0].diff[k,c] = d_L_fcx[c] * d_fcx_scij + d_L_fcy[c] * d_fcy_scij

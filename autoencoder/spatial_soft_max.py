@@ -38,5 +38,9 @@ class SpatialSoftMax(caffe.Layer):
     def backward(self, top, propagate_down, bottom):
         # TODO: backprop alpha
         # top[0].diff[...] = d top / d s_cij
-        # d s_cij / d a_ci'j' = sc_ij (delta_ij - s_ci'j') where delta_ij = 1 if i=i', j=j', else 0
-        pass
+        N, D, M, _ = bottom[0].data.shape
+        delta_ij = np.eye(M)
+        for k in xrange(N):
+            # d s_cij / d a_ci'j' = sc_ij (delta_ij - s_ci'j') where delta_ij = 1 if i=i', j=j', else 0
+            for c in xrange(D):
+                bottom[0].diff[k,c] = top[0].diff[k,c] * (delta_ij - top[0].diff[k,c])
