@@ -15,12 +15,15 @@ class ProbabilityDistribution(caffe.Layer):
         # check input pair
         if len(bottom) != 1:
             raise Exception("Need 1 input for probability distribution")
-        if len(top) != 1:
-            raise Exception("Need 1 output for probability distribution")
+        if len(top) != 2:
+            raise Exception("Need 2 outputs for probability distribution")
+
+        self.beta = 0.95
          
     def reshape(self, bottom, top):
         N, D, _, _ = bottom[0].data.shape
         top[0].reshape(*(N, 2 * D))
+        top[1].reshape(*(N, D))
 
     def forward(self, bottom, top):
         _, D, M, _ = bottom[0].data.shape
@@ -28,6 +31,7 @@ class ProbabilityDistribution(caffe.Layer):
         xv, yv = np.meshgrid(np.arange(M), np.arange(M))
 
         for i in xrange(bottom[0].num):
+            # TODO: figure out why overflow is happening for x_fc and y_fc
             # Compute the expected 2D position for the probability distribution of each channel
             x_fc = np.sum(xv * bottom[0].data[i], axis=1)
             x_fc = np.sum(x_fc, axis=1)
@@ -35,6 +39,12 @@ class ProbabilityDistribution(caffe.Layer):
             y_fc = np.sum(y_fc, axis=1)
             top[0].data[i][::2] = x_fc
             top[0].data[i][1::2] = y_fc
+
+            # Save the s_cij for feature presence
+            # TODO: Because feature points may fall between boundaries, sum probabilities of 3x3 window
+            x_fc = np.floor(x_fc).astype(int)
+            y_fc = np.floor(y_fc).astype(int)
+            top[1].data[i] = (bottom[0].data[i][np.arange(D), x_fc, y_fc] > self.beta)
 
     def backward(self, top, propagate_down, bottom):
         # top[0].diff[...] = d top / d x_fc or d top / d y_fc

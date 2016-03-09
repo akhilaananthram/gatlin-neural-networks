@@ -43,4 +43,5 @@ class SpatialSoftMax(caffe.Layer):
         for k in xrange(N):
             # d s_cij / d a_ci'j' = sc_ij (delta_ij - s_ci'j') where delta_ij = 1 if i=i', j=j', else 0
             for c in xrange(D):
-                bottom[0].diff[k,c] = top[0].diff[k,c] * (delta_ij - top[0].diff[k,c])
+                d_scij_acij = top[0].data[k,c] * (delta_ij - top[0].data[k,c])
+                bottom[0].diff[k,c] = np.dot(top[0].data[k,c], d_scij_acij)
