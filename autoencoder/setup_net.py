@@ -48,10 +48,10 @@ def pynet(training_images, batch_size):
     n.bn3 = L.BatchNorm(n.conv3)
     n.relu3 = L.ReLU(n.bn3)
     # Compute the softmax for each channel in the blob
-    n.spatialsoftmax = L.Python(n.relu3, name="spatialsoftmax", ntop=1,
-                                python_param={"module": "spatial_soft_max",
-                                              "layer": "SpatialSoftMax"})
-    n.probabilitydist, n.s_cij = L.Python(n.spatialsoftmax, name="probabilitydist", ntop=2,
+    n.softmax = L.Python(n.relu3, name="softmax", ntop=1,
+                                python_param={"module": "soft_max",
+                                              "layer": "SoftMax"})
+    n.probabilitydist, n.s_cij = L.Python(n.softmax, name="probabilitydist", ntop=2,
                                           python_param={"module": "probability_distribution",
                                                         "layer": "ProbabilityDistribution"})
 
@@ -62,12 +62,12 @@ def pynet(training_images, batch_size):
     # TODO: add smoothness penalty
     n.loss = L.EuclideanLoss(n.reconstruction, n.downsample_flat)
 
-    return n.to_proto()
+    return str(n.to_proto())
 
 
 if __name__ == "__main__":
     curr_dir = os.path.dirname(os.path.realpath(__file__))  
 
     with open(os.path.join(curr_dir, "net.prototxt"), "w") as f:
-        f.write(str(pynet(os.path.join(curr_dir, "img_db"), BATCH)))
+        f.write(pynet(os.path.join(curr_dir, "img_db"), BATCH))
 
