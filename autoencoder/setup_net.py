@@ -1,6 +1,7 @@
 import caffe
 import os
 import sys
+import tools
 
 from caffe import layers as L
 from caffe import params as P
@@ -68,6 +69,21 @@ def pynet(training_images, batch_size):
 if __name__ == "__main__":
     curr_dir = os.path.dirname(os.path.realpath(__file__))  
 
-    with open(os.path.join(curr_dir, "net.prototxt"), "w") as f:
+    with open(os.path.join(curr_dir, "train.prototxt"), "w") as f:
         f.write(pynet(os.path.join(curr_dir, "img_db"), BATCH))
+    with open(os.path.join(curr_dir, "val.prototxt"), "w") as f:
+        f.write(pynet(os.path.join(curr_dir, "img_db"), BATCH))
+
+    solver = tools.CaffeSolver(trainnet_prototxt_path = "train.prototxt", testnet_prototxt_path = "val.prototxt")
+    solver.sp["test_iter"] = "1000"
+    solver.sp["test_interval"] = "5000"
+    solver.sp["display"] = "40"
+    solver.sp["average_loss"] = "40"
+    solver.sp["base_lr"] = "0.01"
+    solver.sp["lr_policy"] = "step"
+    solver.sp["max_iter"] = "350000"
+    solver.sp["weight_decay"] = "0.0002"
+    solver.sp["snapshot_prefix"] = "encodings/snapshots"
+    solver.sp["solver_mode"] = "GPU"
+    solver.write('solver.prototxt')
 
