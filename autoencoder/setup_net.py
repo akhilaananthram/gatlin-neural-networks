@@ -10,7 +10,7 @@ BATCH = 64  # batch size
 SIZE = 240 # size of image for input
 DOWNSAMPLE = 60 # size of downsampled black and white image
 
-def pynet(training_images, batch_size, phase):
+def pynet(images, batch_size, phase):
     n = caffe.NetSpec()
     
     # labels are not used because this is an autoencoder
@@ -18,7 +18,7 @@ def pynet(training_images, batch_size, phase):
     #                         new_height=SIZE, new_width=SIZE, shuffle=True,
     #                         include={"phase": phase})
     # TODO: subtract the mean
-    n.original = L.Data(source=training_images, batch_size=batch_size,
+    n.original = L.Data(source=images, batch_size=batch_size,
                         crop_size=SIZE, backend=P.Data.LMDB, mirror=1,
                         include={"phase": phase})
     # Get black and white
@@ -72,11 +72,13 @@ if __name__ == "__main__":
     curr_dir = os.path.dirname(os.path.realpath(__file__))  
 
     with open(os.path.join(curr_dir, "train.prototxt"), "w") as f:
-        f.write(pynet(os.path.join(curr_dir, "img_db"), BATCH, 0))
+        data = os.path.join(curr_dir, "img_db", "train")
+        f.write(pynet(data, BATCH, 0))
     with open(os.path.join(curr_dir, "val.prototxt"), "w") as f:
-        f.write(pynet(os.path.join(curr_dir, "img_db"), BATCH, 1))
+        data = os.path.join(curr_dir, "img_db", "val")
+        f.write(pynet(data, BATCH, 1))
 
-    solver = tools.CaffeSolver(trainnet_prototxt_path="train.prototxt", testnet_prototxt_path="val.prototxt")
+    solver = tools.CaffeSolver(net_prototxt_path="train.prototxt", testnet_prototxt_path="val.prototxt")
     solver.sp["test_iter"] = "1000"
     solver.sp["test_interval"] = "5000"
     solver.sp["display"] = "40"

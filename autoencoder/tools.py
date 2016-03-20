@@ -62,8 +62,8 @@ class CaffeSolver:
     stored as strings in strings.
     """
 
-    def __init__(self, testnet_prototxt_path="testnet.prototxt",
-                 trainnet_prototxt_path="trainnet.prototxt", debug=False):
+    def __init__(self, net_prototxt_path="net.prototxt",
+                 testnet_prototxt_path="", debug=False):
 
         self.sp = {}
 
@@ -86,8 +86,11 @@ class CaffeSolver:
         # important, but rare:
         self.sp['gamma'] = '0.1'
         self.sp['weight_decay'] = '0.0005'
-        self.sp['train_net'] = '"' + trainnet_prototxt_path + '"'
-        self.sp['test_net'] = '"' + testnet_prototxt_path + '"'
+        if not testnet_prototxt_path:
+            self.sp['net'] = '"' + net_prototxt_path + '"'
+        else:
+            self.sp['train_net'] = '"' + net_prototxt_path + '"'
+            self.sp['test_net'] = '"' + testnet_prototxt_path + '"'
 
         # pretty much never change these.
         self.sp['max_iter'] = '100000'
