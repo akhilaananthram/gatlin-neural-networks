@@ -6,7 +6,7 @@ import tools
 from caffe import layers as L
 from caffe import params as P
 
-BATCH = 64  # batch size
+BATCH = 10  # batch size
 SIZE = 240 # size of image for input
 DOWNSAMPLE = 60 # size of downsampled black and white image
 

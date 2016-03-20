@@ -7,7 +7,7 @@ from PIL import Image # Pillow
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run forward and backward pass")
-    parser.add_argument("--proto", default="net.prototxt",
+    parser.add_argument("--proto", default="train.prototxt",
                         help="path to proto file")
     args = parser.parse_args()
 
