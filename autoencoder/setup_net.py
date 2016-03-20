@@ -18,8 +18,9 @@ def pynet(images, batch_size, phase):
     #                         new_height=SIZE, new_width=SIZE, shuffle=True,
     #                         include={"phase": phase})
     # TODO: subtract the mean
+    # only mirror for train
     n.original = L.Data(source=images, batch_size=batch_size,
-                        crop_size=SIZE, backend=P.Data.LMDB, mirror=1,
+                        crop_size=SIZE, backend=P.Data.LMDB, mirror=(1 and not phase),
                         include={"phase": phase})
     # Get black and white
     n.blackandwhite = L.Python(n.original, name="blackandwhite", ntop=1,
@@ -30,7 +31,6 @@ def pynet(images, batch_size, phase):
     n.downsample = L.Pooling(n.blackandwhite, kernel_size=4, stride=4)
     n.downsample_flat = L.Flatten(n.downsample)
 
-    # TODO: initialize weights from pretrained network
     # Want weights to be smaller if more inputs
     n.conv1 = L.Convolution(n.original, num_output=64, kernel_size=7, stride=2,
                             weight_filler={"type": "gaussian", "std": 0.01},
@@ -62,7 +62,7 @@ def pynet(images, batch_size, phase):
                                       weight_filler={"type": "gaussian", "std": 0.01},
                                       #weight_filler={"type": "xavier"},
                                       bias_filler={"type": "constant"})
-    # TODO: add smoothness penalty
+    # TODO: add smoothness penalty as another loss function
     n.loss = L.EuclideanLoss(n.reconstruction, n.downsample_flat)
 
     return str(n.to_proto())
