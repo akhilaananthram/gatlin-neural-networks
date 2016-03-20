@@ -10,15 +10,17 @@ BATCH = 64  # batch size
 SIZE = 240 # size of image for input
 DOWNSAMPLE = 60 # size of downsampled black and white image
 
-def pynet(training_images, batch_size):
+def pynet(training_images, batch_size, phase):
     n = caffe.NetSpec()
     
     # labels are not used because this is an autoencoder
     #n.original = L.ImageData(source=training_images, batch_size=batch_size,
-    #                          new_height=SIZE, new_width=SIZE, shuffle=True)
+    #                         new_height=SIZE, new_width=SIZE, shuffle=True,
+    #                         include={"phase": phase})
     # TODO: subtract the mean
     n.original = L.Data(source=training_images, batch_size=batch_size,
-                        crop_size=SIZE, backend=P.Data.LMDB, mirror=1)
+                        crop_size=SIZE, backend=P.Data.LMDB, mirror=1,
+                        include={"phase": phase})
     # Get black and white
     n.blackandwhite = L.Python(n.original, name="blackandwhite", ntop=1,
                                 python_param={"module": "black_and_white_filter",
@@ -70,20 +72,20 @@ if __name__ == "__main__":
     curr_dir = os.path.dirname(os.path.realpath(__file__))  
 
     with open(os.path.join(curr_dir, "train.prototxt"), "w") as f:
-        f.write(pynet(os.path.join(curr_dir, "img_db"), BATCH))
+        f.write(pynet(os.path.join(curr_dir, "img_db"), BATCH, 0))
     with open(os.path.join(curr_dir, "val.prototxt"), "w") as f:
-        f.write(pynet(os.path.join(curr_dir, "img_db"), BATCH))
+        f.write(pynet(os.path.join(curr_dir, "img_db"), BATCH, 1))
 
-    solver = tools.CaffeSolver(trainnet_prototxt_path = "train.prototxt", testnet_prototxt_path = "val.prototxt")
+    solver = tools.CaffeSolver(trainnet_prototxt_path="train.prototxt", testnet_prototxt_path="val.prototxt")
     solver.sp["test_iter"] = "1000"
     solver.sp["test_interval"] = "5000"
     solver.sp["display"] = "40"
     solver.sp["average_loss"] = "40"
     solver.sp["base_lr"] = "0.01"
-    solver.sp["lr_policy"] = "step"
+    solver.sp["lr_policy"] = '"step"'
     solver.sp["max_iter"] = "350000"
     solver.sp["weight_decay"] = "0.0002"
-    solver.sp["snapshot_prefix"] = "encodings/snapshots"
+    solver.sp["snapshot_prefix"] = '"encodings/snapshots"'
     solver.sp["solver_mode"] = "GPU"
     solver.write('solver.prototxt')
 
