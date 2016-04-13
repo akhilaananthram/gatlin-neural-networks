@@ -13,9 +13,6 @@ if __name__ == "__main__":
 
     trained_net = caffe.Net(args.proto, caffe.TRAIN)
 
-    print "Feature Points Dimensions:"
-    print trained_net.blobs["probabilitydist"].data.shape
-
     print "running sanity check on forward and backward passes"
     trained_net.forward()
     trained_net.backward()
@@ -26,6 +23,9 @@ if __name__ == "__main__":
     trained_net.backward()
     print "loss:"
     print trained_net.blobs["loss"].data
+
+    print "Feature Points Dimensions:"
+    print trained_net.blobs["probabilitydist"].data.shape
 
     reconstruction = trained_net.blobs["reconstruction"].data
     N, MM = reconstruction.shape

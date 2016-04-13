@@ -31,7 +31,6 @@ class ProbabilityDistribution(caffe.Layer):
         xv, yv = np.meshgrid(np.arange(M), np.arange(M))
 
         for i in xrange(bottom[0].num):
-            # TODO: figure out why overflow is happening for x_fc and y_fc
             # Compute the expected 2D position for the probability distribution of each channel
             x_fc = np.sum(xv * bottom[0].data[i], axis=1)
             x_fc = np.sum(x_fc, axis=1)
