@@ -25,12 +25,7 @@ if __name__ == "__main__":
         # Load pretrained weights
         solver.net.copy_from(args.model)
 
-    # Sanity check
-    solver.net.forward()  # train net
-    solver.test_nets[0].forward()  # test net (there can be more than one)
-
     train_loss = np.zeros(args.niter)
-
     for it in xrange(args.niter):
         print "Iteration {}".format(it)
         solver.step(1)  # SGD by Caffe
