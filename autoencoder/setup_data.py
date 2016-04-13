@@ -43,12 +43,21 @@ def fill_database(env, images):
             # The encode is only essential in Python 3
             txn.put(str_id.encode('ascii'), datum.SerializeToString())
 
+def save_file(path, images, dest):
+    with open(dest, 'w') as f:
+        for filename in images:
+            f.write("{} 0\n".format(os.path.join(path, filename)))
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="creates database from images")
+    parser = argparse.ArgumentParser(description="creates database or caffe formatted text files from images")
     parser.add_argument("--data", default="data", help="Folder containing images")
     parser.add_argument("--db", default="img_db", help="Folder to contain DB")
+    parser.add_argument("--out-train", default="train.txt", help="File containing paths to images")
+    parser.add_argument("--out-val", default="val.txt", help="File containing paths to images")
+    parser.add_argument("--randomize", action="store_true", help="Randomize the data")
     parser.add_argument("--val", default=0.2, help="Percentage for validation")
+    parser.add_argument("--format", choices=["db", "txt"], default="txt", help="Format to save data in")
     args = parser.parse_args()
 
     # Get image paths and size
@@ -61,8 +70,16 @@ if __name__ == "__main__":
     val_images = images[val_indices]
     train_images = images[~val_indices]
 
-    env_train = prepare_database(os.path.join(args.db, "train"), train_images)
-    env_val = prepare_database(os.path.join(args.db, "val"), val_images)
+    if args.randomize:
+        np.random.shuffle(val_images)
+        np.random.shuffle(train_images)
 
-    fill_database(env_train, train_images)
-    fill_database(env_val, val_images)
+    if args.format == "db":
+        env_train = prepare_database(os.path.join(args.db, "train"), train_images)
+        env_val = prepare_database(os.path.join(args.db, "val"), val_images)
+
+        fill_database(env_train, train_images)
+        fill_database(env_val, val_images)
+    else:
+        save_file(args.data, train_images, args.out_train)
+        save_file(args.data, val_images, args.out_val)

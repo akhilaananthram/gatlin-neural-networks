@@ -19,8 +19,8 @@ class BlackAndWhiteFilter(caffe.Layer):
             raise Exception("Need 1 output for the black and white filter")
          
     def reshape(self, bottom, top):
-        N, _, M, _ = bottom[0].data.shape
-        top[0].reshape(*(N, 1, M, M))
+        N, _, X, Y = bottom[0].data.shape
+        top[0].reshape(*(N, 1, X, Y))
 
     def forward(self, bottom, top):
         # 0.21 R + 0.72 G + 0.07 B

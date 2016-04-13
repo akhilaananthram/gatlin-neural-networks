@@ -1,3 +1,4 @@
+import argparse
 import caffe
 import os
 import sys
@@ -10,18 +11,23 @@ BATCH = 10  # batch size
 SIZE = 240 # size of image for input
 DOWNSAMPLE = 60 # size of downsampled black and white image
 
-def pynet(images, batch_size, phase):
+def pynet(images, batch_size, phase, data_type):
     n = caffe.NetSpec()
     
     # labels are not used because this is an autoencoder
-    #n.original = L.ImageData(source=training_images, batch_size=batch_size,
-    #                         new_height=SIZE, new_width=SIZE, shuffle=True,
-    #                         include={"phase": phase})
+    #n.original = L.DummyData(shape={"dim":[BATCH, 3, SIZE, SIZE]},
+    #                         dummy_data_param={"data_filler": {"type": "xavier"}},
+    #                         ntop=1)
     # TODO: subtract the mean
-    # only mirror for train
-    n.original = L.Data(source=images, batch_size=batch_size,
-                        crop_size=SIZE, backend=P.Data.LMDB, mirror=(1 and not phase),
-                        include={"phase": phase})
+    if data_type:
+        n.original, n.labels = L.ImageData(source=images, batch_size=batch_size, ntop=2,
+                                           new_height=SIZE, new_width=SIZE, shuffle=True,
+                                           include={"phase": phase})
+    else:
+        n.original = L.Data(source=images, batch_size=batch_size,
+                            backend=P.Data.LMDB, mirror=(not phase),
+                            include={"phase": phase})
+
     # Get black and white
     n.blackandwhite = L.Python(n.original, name="blackandwhite", ntop=1,
                                 python_param={"module": "black_and_white_filter",
@@ -69,16 +75,20 @@ def pynet(images, batch_size, phase):
 
 
 if __name__ == "__main__":
-    curr_dir = os.path.dirname(os.path.realpath(__file__))  
+    parser = argparse.ArgumentParser(description="setup net from database or txt file")
+    parser.add_argument("--train", required=True, help="path to database directory or txt file of paths")
+    parser.add_argument("--val", required=True, help="path to database directory or txt file of paths")
+    parser.add_argument("--train-proto", default="train.prototxt", help="path to train proto file")
+    parser.add_argument("--val-proto", default="val.prototxt", help="path to val proto file")
+    parser.add_argument("--solver", default="solver.prototxt", help="path to solver proto file")
+    args = parser.parse_args()
 
-    with open(os.path.join(curr_dir, "train.prototxt"), "w") as f:
-        data = os.path.join(curr_dir, "img_db", "train")
-        f.write(pynet(data, BATCH, 0))
-    with open(os.path.join(curr_dir, "val.prototxt"), "w") as f:
-        data = os.path.join(curr_dir, "img_db", "val")
-        f.write(pynet(data, BATCH, 1))
+    with open(args.train_proto, "w") as f:
+        f.write(pynet(args.train, BATCH, 0, os.path.isfile(args.train)))
+    with open(args.val_proto, "w") as f:
+        f.write(pynet(args.val, BATCH, 1, os.path.isfile(args.val)))
 
-    solver = tools.CaffeSolver(net_prototxt_path="train.prototxt", testnet_prototxt_path="val.prototxt")
+    solver = tools.CaffeSolver(net_prototxt_path=args.train_proto, testnet_prototxt_path=args.val_proto)
     solver.sp["test_iter"] = "1000"
     solver.sp["test_interval"] = "5000"
     solver.sp["display"] = "40"
@@ -89,5 +99,5 @@ if __name__ == "__main__":
     solver.sp["weight_decay"] = "0.0002"
     solver.sp["snapshot_prefix"] = '"encodings/snapshots"'
     solver.sp["solver_mode"] = "GPU"
-    solver.write('solver.prototxt')
+    solver.write(args.solver)
 
