@@ -1,6 +1,7 @@
 import argparse
 import caffe
 import numpy as np
+import warnings
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run train and test")
@@ -15,6 +16,10 @@ if __name__ == "__main__":
     # Uncomment when training with a GPU
     #caffe.set_device(0)
     #caffe.set_mode_gpu()
+
+    # Debug
+    #np.seterr(all='warn')
+    #warnings.filterwarnings('error')
 
     solver = caffe.SGDSolver(args.solver)
 

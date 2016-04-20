@@ -46,15 +46,15 @@ class ProbabilityDistribution(caffe.Layer):
             top[1].data[i] = (bottom[0].data[i][np.arange(D), x_fc, y_fc] > self.beta)
 
     def backward(self, top, propagate_down, bottom):
-        # top[0].diff[...] = d top / d x_fc or d top / d y_fc
-        # d x_fc / d_scij = i
-        # d y_fc / d_scij = j
+        # top[0].diff[...] = d LOSS/d x_fc or d LOSS/d y_fc
+        # d x_fc/d_scij = i
+        # d y_fc/d_scij = j
         N, D, M, _ = bottom[0].data.shape
         d_fcx_scij, d_fcy_scij = np.meshgrid(np.arange(M), np.arange(M))
         for k in xrange(N):
-            # d L / d s_cij = d L / d x_fc * d x_fc / d s_cij + d L / d y_fc * d y_fc / d s_cij
+            # d LOSS/d s_cij = d LOSS/d x_fc * d x_fc/d s_cij + d LOSS/d y_fc * d y_fc/d s_cij
             d_L_fcx = top[0].diff[k][::2]
             d_L_fcy = top[0].diff[k][1::2]
             for c in xrange(D):
-                # TODO: RuntimeWarning: invalid value encountered in multiply
+                # TODO: RuntimeWarning: invalid value encountered in multiply (top[0].diff = inf)
                 bottom[0].diff[k,c] = d_L_fcx[c] * d_fcx_scij + d_L_fcy[c] * d_fcy_scij
