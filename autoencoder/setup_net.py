@@ -2,7 +2,7 @@ import argparse
 import caffe
 import os
 import sys
-import tools
+import caffetools
 
 from caffe import layers as L
 from caffe import params as P
@@ -90,10 +90,10 @@ if __name__ == "__main__":
     with open(args.val_proto, "w") as f:
         f.write(pynet(args.val, BATCH, 1, get_data_type(args.val)))
 
-    solver = tools.CaffeSolver(net_prototxt_path=args.train_proto, testnet_prototxt_path=args.val_proto)
+    solver = caffetools.CaffeSolver(net_prototxt_path=args.train_proto, testnet_prototxt_path=args.val_proto)
     solver.sp["test_iter"] = "1000"
     solver.sp["test_interval"] = "5000"
-    solver.sp["test_initialization"] = "true"
+    solver.sp["test_initialization"] = "false"
     solver.sp["display"] = "40"
     solver.sp["average_loss"] = "40"
     solver.sp["base_lr"] = "0.01"

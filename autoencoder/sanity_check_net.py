@@ -1,9 +1,7 @@
 import argparse
 import caffe
-import math
-import numpy as np
+import tools
 
-from PIL import Image # Pillow
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run forward and backward pass")
@@ -28,8 +26,10 @@ if __name__ == "__main__":
     print trained_net.blobs["probabilitydist"].data.shape
 
     reconstruction = trained_net.blobs["reconstruction"].data
-    N, MM = reconstruction.shape
-    reconstruction = np.reshape(reconstruction, (N, math.sqrt(MM), math.sqrt(MM)))
-    img = Image.fromarray(reconstruction[0])
-    img = img.convert('RGB')
-    img.save('reconstruction.png')
+    black_and_white = trained_net.blobs["blackandwhite"].data
+    probabilitydist = trained_net.blobs["probabilitydist"].data
+
+    for i in xrange(len(trained_net.blobs["probabilitydist"].data)):
+        tools.plot_reconstruction(reconstruction[i], "reconstructions/{}.png".format(i))
+        # Remove axis for channels
+        tools.plot_features(black_and_white[i][0], probabilitydist[i], "reconstructions/{}f.png".format(i))
