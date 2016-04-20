@@ -6,10 +6,7 @@ import tools
 
 from caffe import layers as L
 from caffe import params as P
-
-BATCH = 10  # batch size
-SIZE = 240 # size of image for input
-DOWNSAMPLE = 60 # size of downsampled black and white image
+from constants import *
 
 def pynet(images, batch_size, phase, data_type):
     n = caffe.NetSpec()
@@ -96,12 +93,15 @@ if __name__ == "__main__":
     solver = tools.CaffeSolver(net_prototxt_path=args.train_proto, testnet_prototxt_path=args.val_proto)
     solver.sp["test_iter"] = "1000"
     solver.sp["test_interval"] = "5000"
+    solver.sp["test_initialization"] = "true"
     solver.sp["display"] = "40"
     solver.sp["average_loss"] = "40"
     solver.sp["base_lr"] = "0.01"
-    solver.sp["lr_policy"] = '"step"'
+    solver.sp["lr_policy"] = '"exp"'
     solver.sp["max_iter"] = "350000"
     solver.sp["weight_decay"] = "0.0002"
+    solver.sp["gamma"] = "0.9999"
+    solver.sp["power"] = "0.00002"
     solver.sp["snapshot_prefix"] = '"encodings/snapshots"'
-    solver.sp["solver_mode"] = "GPU"
+    solver.sp["solver_mode"] = "CPU"
     solver.write(args.solver)

@@ -23,8 +23,8 @@ class SoftMax(caffe.Layer):
         self.alpha = 1
          
     def reshape(self, bottom, top):
-        N, D, M, _ = bottom[0].data.shape
-        top[0].reshape(*(N, D, M, M))
+        N, D, X, Y = bottom[0].data.shape
+        top[0].reshape(*(N, D, X, Y))
 
     def forward(self, bottom, top):
         for i in xrange(bottom[0].num):

@@ -32,3 +32,6 @@ if __name__ == "__main__":
 
         # store the train loss
         train_loss[it] = solver.net.blobs['loss'].data
+
+    print train_loss
+    print "Finished train - test"

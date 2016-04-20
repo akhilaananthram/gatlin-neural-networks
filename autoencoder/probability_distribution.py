@@ -56,4 +56,5 @@ class ProbabilityDistribution(caffe.Layer):
             d_L_fcx = top[0].diff[k][::2]
             d_L_fcy = top[0].diff[k][1::2]
             for c in xrange(D):
+                # TODO: RuntimeWarning: invalid value encountered in multiply
                 bottom[0].diff[k,c] = d_L_fcx[c] * d_fcx_scij + d_L_fcy[c] * d_fcy_scij
