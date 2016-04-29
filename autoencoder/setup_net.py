@@ -8,21 +8,28 @@ from caffe import layers as L
 from caffe import params as P
 from constants import *
 
-def pynet(images, batch_size, phase, data_type):
+def pynet(images, batch_size, phase, data_type, mean_file):
     n = caffe.NetSpec()
     
+    # TODO: divide by STD
+    # subtract the mean
+    transform_param = {}
+    if mean_file is not None:
+        transform_param["mean_file"] = mean_file
+
     # labels are not used because this is an autoencoder
-    # TODO: subtract the mean
     if data_type == "txt":
         n.original, n.labels = L.ImageData(source=images, batch_size=batch_size, ntop=2,
                                            new_height=SIZE, new_width=SIZE, shuffle=True,
-                                           include={"phase": phase})
+                                           include={"phase": phase}, mirror=(not phase),
+                                           transform_param=transform_param)
     elif data_type == "db":
         n.original = L.Data(source=images, batch_size=batch_size,
                             backend=P.Data.LMDB, mirror=(not phase),
-                            include={"phase": phase})
+                            include={"phase": phase},
+                            transform_param=transform_param)
     else:
-        n.original = L.DummyData(shape={"dim":[BATCH, 3, SIZE, SIZE]},
+        n.original = L.DummyData(shape={"dim":[batch_size, 3, SIZE, SIZE]},
                                  dummy_data_param={"data_filler": {"type": "xavier"}},
                                  ntop=1)
 
@@ -37,17 +44,20 @@ def pynet(images, batch_size, phase, data_type):
 
     # Want weights to be smaller if more inputs
     n.conv1 = L.Convolution(n.original, num_output=64, kernel_size=7, stride=2,
-                            weight_filler={"type": "gaussian", "std": 0.01},
+                            weight_filler={"type": "xavier"},
+                            #weight_filler={"type": "gaussian", "std": 0.01},
                             bias_filler={"type": "constant"})
     n.bn1 = L.BatchNorm(n.conv1)
     n.relu1 = L.ReLU(n.bn1)
     n.conv2 = L.Convolution(n.relu1, num_output=32, kernel_size=5,
-                            weight_filler={"type": "gaussian", "std": 0.01},
+                            weight_filler={"type": "xavier"},
+                            #weight_filler={"type": "gaussian", "std": 0.01},
                             bias_filler={"type": "constant"})
     n.bn2 = L.BatchNorm(n.conv2)
     n.relu2 = L.ReLU(n.bn2)
     n.conv3 = L.Convolution(n.relu2, num_output=16, kernel_size=5,
-                            weight_filler={"type": "gaussian", "std": 0.01},
+                            weight_filler={"type": "xavier"},
+                            #weight_filler={"type": "gaussian", "std": 0.01},
                             bias_filler={"type": "constant"})
     n.bn3 = L.BatchNorm(n.conv3)
     n.relu3 = L.ReLU(n.bn3)
@@ -60,7 +70,7 @@ def pynet(images, batch_size, phase, data_type):
                                                         "layer": "ProbabilityDistribution"})
 
     n.reconstruction = L.InnerProduct(n.probabilitydist, num_output=DOWNSAMPLE * DOWNSAMPLE,
-                                      weight_filler={"type": "gaussian", "std": 0.01},
+                                      weight_filler={"type": "xavier"},
                                       bias_filler={"type": "constant"})
     # TODO: add smoothness penalty as another loss function
     n.loss = L.EuclideanLoss(n.reconstruction, n.downsample_flat)
@@ -83,12 +93,13 @@ if __name__ == "__main__":
     parser.add_argument("--train-proto", default="train.prototxt", help="path to train proto file")
     parser.add_argument("--val-proto", default="val.prototxt", help="path to val proto file")
     parser.add_argument("--solver", default="solver.prototxt", help="path to solver proto file")
+    parser.add_argument("--mean", default=None, help="path to mean binary proto file")
     args = parser.parse_args()
 
     with open(args.train_proto, "w") as f:
-        f.write(pynet(args.train, BATCH, 0, get_data_type(args.train)))
+        f.write(pynet(args.train, BATCH_TRAIN, 0, get_data_type(args.train), args.mean))
     with open(args.val_proto, "w") as f:
-        f.write(pynet(args.val, BATCH, 1, get_data_type(args.val)))
+        f.write(pynet(args.val, BATCH_TEST, 1, get_data_type(args.val), args.mean))
 
     solver = caffetools.CaffeSolver(net_prototxt_path=args.train_proto, testnet_prototxt_path=args.val_proto)
     solver.sp["test_iter"] = "1000"
@@ -96,7 +107,7 @@ if __name__ == "__main__":
     solver.sp["test_initialization"] = "false"
     solver.sp["display"] = "40"
     solver.sp["average_loss"] = "40"
-    solver.sp["base_lr"] = "0.01"
+    solver.sp["base_lr"] = "0.001"
     solver.sp["lr_policy"] = '"exp"'
     solver.sp["max_iter"] = "350000"
     solver.sp["weight_decay"] = "0.0002"

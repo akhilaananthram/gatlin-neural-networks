@@ -30,7 +30,7 @@ def fill_database(env, images):
     with env.begin(write=True) as txn:
         # txn is a Transaction object
         for i, img_path in enumerate(images):
-            img = np.array(Image.open(os.path.join(args.data, img_path)))
+            img = np.array(Image.open(img_path))
 
             datum = caffe.proto.caffe_pb2.Datum()
             datum.channels = img.shape[2]
@@ -56,12 +56,13 @@ if __name__ == "__main__":
     parser.add_argument("--out-train", default="train.txt", help="File containing paths to images")
     parser.add_argument("--out-val", default="val.txt", help="File containing paths to images")
     parser.add_argument("--randomize", action="store_true", help="Randomize the data")
+    parser.add_argument("--mean", default=None, help="path for mean file")
     parser.add_argument("--val", default=0.2, help="Percentage for validation")
     parser.add_argument("--format", choices=["db", "txt"], default="txt", help="Format to save data in")
     args = parser.parse_args()
 
     # Get image paths and size
-    images = np.array([f for f in os.listdir(args.data) if not f.startswith(".")])
+    images = np.array([os.path.join(args.data, f) for f in os.listdir(args.data) if f.endswith("jpg")])
 
     # Divide into validation and training
     num_validation = int(len(images) * args.val)
@@ -69,6 +70,20 @@ if __name__ == "__main__":
     val_indices[random.sample(xrange(len(images)), num_validation)] = True
     val_images = images[val_indices]
     train_images = images[~val_indices]
+
+    if args.mean is not None:
+        mean = None
+        for img_path in train_images:
+            img = np.array(Image.open(img_path))
+            if mean is None:
+                mean = img
+            else:
+                mean += img
+
+        mean /= len(train_images)
+        mean_blob = caffe.io.array_to_blobproto(mean)
+        with open(args.mean, "wb") as f:
+            f.write(mean_blob.SerializeToString())
 
     if args.randomize:
         np.random.shuffle(val_images)

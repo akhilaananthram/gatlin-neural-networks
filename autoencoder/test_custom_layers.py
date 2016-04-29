@@ -12,7 +12,7 @@ from soft_max import SoftMax
 
 def net_spec_black_and_white():
     n = caffe.NetSpec()
-    n.original = L.DummyData(shape={"dim":[BATCH, 3, SIZE, SIZE]},
+    n.original = L.DummyData(shape={"dim":[BATCH_TEST, 3, SIZE, SIZE]},
                              dummy_data_param={"data_filler": {"type": "xavier"}},
                              ntop=1)
     n.blackandwhite = L.Python(n.original, name="blackandwhite", ntop=1,
@@ -26,7 +26,7 @@ def net_spec_black_and_white():
 
 def net_spec_soft_max():
     n = caffe.NetSpec()
-    n.relu3 = L.DummyData(shape={"dim":[BATCH, 16, 109, 109]},
+    n.relu3 = L.DummyData(shape={"dim":[BATCH_TEST, 16, 109, 109]},
                              dummy_data_param={"data_filler": {"type": "xavier"}},
                              ntop=1)
     n.softmax = L.Python(n.relu3, name="softmax", ntop=1,
@@ -40,7 +40,7 @@ def net_spec_soft_max():
 
 def net_spec_probability_distribution():
     n = caffe.NetSpec()
-    n.softmax = L.DummyData(shape={"dim":[BATCH, 16, 109, 109]},
+    n.softmax = L.DummyData(shape={"dim":[BATCH_TEST, 16, 109, 109]},
                              dummy_data_param={"data_filler": {"type": "xavier"}},
                              ntop=1)
     n.probabilitydist, n.s_cij = L.Python(n.softmax, name="probabilitydist", ntop=2,
