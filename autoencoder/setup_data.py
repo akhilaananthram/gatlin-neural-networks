@@ -43,10 +43,10 @@ def fill_database(env, images):
             # The encode is only essential in Python 3
             txn.put(str_id.encode('ascii'), datum.SerializeToString())
 
-def save_file(path, images, dest):
+def save_file(images, dest):
     with open(dest, 'w') as f:
         for filename in images:
-            f.write("{} 0\n".format(os.path.join(path, filename)))
+            f.write("{} 0\n".format(filename))
 
 
 if __name__ == "__main__":
@@ -96,5 +96,5 @@ if __name__ == "__main__":
         fill_database(env_train, train_images)
         fill_database(env_val, val_images)
     else:
-        save_file(args.data, train_images, args.out_train)
-        save_file(args.data, val_images, args.out_val)
+        save_file(train_images, args.out_train)
+        save_file(val_images, args.out_val)

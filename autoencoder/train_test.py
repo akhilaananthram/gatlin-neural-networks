@@ -9,7 +9,7 @@ if __name__ == "__main__":
                         help="Path to solver proto file")
     parser.add_argument("--model", default=None, type=str,
                         help="Path to pretrained caffe model")
-    parser.add_argument("--niter", default=10, type=int,
+    parser.add_argument("--niter", default=50, type=int,
                         help="Number of iterations for training")
     args = parser.parse_args()
 
@@ -21,7 +21,9 @@ if __name__ == "__main__":
     #np.seterr(all='warn')
     #warnings.filterwarnings('error')
 
-    solver = caffe.SGDSolver(args.solver)
+    # Use Adam to avoid worrying about the magnitude of the loss
+    #solver = caffe.SGDSolver(args.solver)
+    solver = caffe.AdamSolver(args.solver)
 
     # each output is (batch size, feature dim, spatial dim)
     print [(k, v.data.shape) for k, v in solver.net.blobs.items()]
