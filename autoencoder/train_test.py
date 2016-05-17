@@ -1,4 +1,5 @@
 import argparse
+import atexit
 import caffe
 import numpy as np
 import warnings
@@ -9,7 +10,7 @@ if __name__ == "__main__":
                         help="Path to solver proto file")
     parser.add_argument("--model", default=None, type=str,
                         help="Path to pretrained caffe model")
-    parser.add_argument("--niter", default=50, type=int,
+    parser.add_argument("--niter", default=350000, type=int,
                         help="Number of iterations for training")
     args = parser.parse_args()
 
@@ -24,6 +25,8 @@ if __name__ == "__main__":
     # Use Adam to avoid worrying about the magnitude of the loss
     #solver = caffe.SGDSolver(args.solver)
     solver = caffe.AdamSolver(args.solver)
+    
+    # TODO: load from snapshot
 
     # each output is (batch size, feature dim, spatial dim)
     print [(k, v.data.shape) for k, v in solver.net.blobs.items()]
@@ -33,12 +36,17 @@ if __name__ == "__main__":
         solver.net.copy_from(args.model)
 
     train_loss = np.zeros(args.niter)
+    def save_loss():
+        np.save("loss.npy", train_loss)
+
+    atexit.register(save_loss)
+
     for it in xrange(args.niter):
-        print "Iteration {}".format(it)
+        if it % 1000 == 0:
+            print "Iteration {}".format(it)
         solver.step(1)  # SGD by Caffe
 
         # store the train loss
         train_loss[it] = solver.net.blobs['loss'].data
 
-    print train_loss
     print "Finished train - test"
