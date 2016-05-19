@@ -8,7 +8,7 @@ from geometry_msgs.msg import Vector3
 def process_image(model, weights):
     # publish to topic
     pub = rospy.Publisher('/gatlin/objectscreencoords', Vector3, queue_size=10)
-    rospy.init_node('blob_maker', anonymous=True)
+    rospy.init_node('object_screen_coordinate_maker', anonymous=True)
 
     # TODO: use GPU if available
     caffe.set_mode_cpu()
