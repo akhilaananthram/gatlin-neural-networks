@@ -13,10 +13,13 @@ if __name__ == "__main__":
                         help="Path to pretrained caffe model")
     parser.add_argument("--niter", default=350000, type=int,
                         help="Number of iterations for training")
+    parser.add_argument("--blob-file", default=None, type=str,
+                        help="Path to blob values")
+    parser.add_argument("--train", dest="train", default=None, type=str,
+                        help="Path to train file")
     args = parser.parse_args()
 
     # Uncomment when training with a GPU
-    caffe.set_mode_cpu()
     #caffe.set_device(0)
     #caffe.set_mode_gpu()
 
@@ -43,6 +46,13 @@ if __name__ == "__main__":
 
     atexit.register(save_loss)
 
+    blobs = {}
+    if args.blob_file is not None:
+        with open(args.blob_file) as f:
+            for line in f:
+                label, xys = line.strip().split(",")
+                blobs[label] = [float(x) for x in xys.split(" ")]
+
     # TODO: iterate over train file to get order of images
     train_labels = []
     if args.train is not None:
@@ -56,6 +66,13 @@ if __name__ == "__main__":
     for it in xrange(args.niter):
         if it % 1000 == 0:
             print "Iteration {}".format(it)
+        batch_blobs = []
+        for l in train_labels[it * 64: (it + 1) * 64]:
+            if l in blobs:
+                batch_blobs.append(blobs[l])
+
+        if len(batch_blobs) > 0:
+            solver.net.blobs["hsv_encoding"].data[...] = np.array(batch_blobs)
 
         solver.step(1)  # SGD by Caffe
 

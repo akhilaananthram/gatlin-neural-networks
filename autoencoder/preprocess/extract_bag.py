@@ -18,6 +18,7 @@ if __name__ == "__main__":
                         default="/camera/rgb/image_rect_color_throttled",
                         help="topic for images")
     parser.add_argument("--factor", default=10**7, help="Factor for decimal digits")
+    parser.add_argument("--interactive", action="store_true", help="Show all images to mark blocks")
     args = parser.parse_args()
 
     bag = Bag(args.bag)
@@ -60,7 +61,8 @@ if __name__ == "__main__":
                 plt.scatter(blobs[::2], blobs[1::2])
                 plt.draw()
             fig.canvas.mpl_connect("button_press_event", onclick)
-            plt.show()
+            if args.interactive:
+                plt.show()
 
     # Pad blobs to max length
     max_blob_count = 0
